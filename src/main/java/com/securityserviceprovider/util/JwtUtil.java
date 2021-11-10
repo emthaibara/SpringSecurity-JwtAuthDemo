@@ -3,7 +3,7 @@ package com.securityserviceprovider.util;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.securityserviceprovider.config.authconfig.MyUserDetails;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +32,11 @@ public class JwtUtil {
 
     //设置过期失效
     private static final long EXPIREDTIME = 1000L;
+
+    public static String getUserRole(String token) {
+        return JwtUtil.getTokenBody(token).verify(token).getClaim("role").asString();
+    }
+
     //生成token
     public String generateToken(UserDetails user) {
         //SALT = BCrypt.gensalt();
@@ -77,8 +82,16 @@ public class JwtUtil {
         //token解析
         JWTVerifier jwtVerifier = getTokenBody(token);
         System.out.println("getSubject:"+jwtVerifier.verify(token).getSubject());
-        System.out.println("getPayload:"+jwtVerifier.verify(token).getPayload());
+        System.out.println("getPayload:"+jwtVerifier.verify(token).getClaim("role").asString());
         System.out.println("gettoken : "+jwtVerifier.verify(token).getToken());
     }
 
+}
+class JwtTest{
+    public static void main(String[] args) {
+        JwtUtil jwtUtil = new JwtUtil();
+        String token = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMzI2Njc0NjQ1NyIsInJvbGUiOiJST0xFX01FTUJFUiIsImlzcyI6ImlzcyIsImV4cCI6MTYzNjQ3NzQyMSwiaWF0IjoxNjM2NDczODIxfQ.bZ21ROKPRoWycHdCN5K3VrjMEtKQFbTtfRmkiyUlO7c";
+        System.out.println(JwtUtil.getUsername(token));
+
+    }
 }

@@ -7,10 +7,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.util.StringUtils;
-
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private static final Logger log = LoggerFactory.getLogger(LoginAuthenticationFilter.class);
-
 
     public LoginAuthenticationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
@@ -58,7 +57,12 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
         phoneNumber = phoneNumber.trim(); //去除前后空格，以防万一
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
                 phoneNumber, password);
-        return this.getAuthenticationManager().authenticate(authRequest);
+        Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
+        UserDetails userDetails = (UserDetails)authentication.getPrincipal();
+        log.info(userDetails.getUsername());
+        log.info(userDetails.getAuthorities().toString());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return authentication;
     }
 
     /**
@@ -83,6 +87,7 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
         }
         return null;
     }
+
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request,

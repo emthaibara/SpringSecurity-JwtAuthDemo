@@ -17,8 +17,6 @@ public class LoginSecurityController {
 
     private static final Logger log = LoggerFactory.getLogger(LoginSecurityController.class);
 
-
-
     @PostMapping("/login")
     public Result<String> login(){
         log.info("login verify success");

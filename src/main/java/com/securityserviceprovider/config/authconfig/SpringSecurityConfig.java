@@ -8,13 +8,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 import javax.annotation.Resource;
 
@@ -31,16 +32,16 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 // 测试用资源，需要验证了的用户才能访问
-                .antMatchers("/login/test").authenticated()
+                .antMatchers("/login/test").hasRole("MEMBER")
                 // 其他都放行了
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
                 .and()
                 .cors()
                 .and()
                 .csrf().disable()               //CRSF禁用，因为不使用session
                 .sessionManagement().disable()      //禁用session
                 .addFilter(new JwtAuthenticationFilter(authenticationManager())) //添加Jwt验证的过滤器
-                .addFilter(new LoginAuthenticationFilter(authenticationManager()))  //添加Login时候的校验过滤器
+                .addFilter(new LoginAuthenticationFilter(authenticationManager()))//添加Login时候的校验过滤器
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
