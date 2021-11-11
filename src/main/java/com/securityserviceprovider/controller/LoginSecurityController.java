@@ -23,6 +23,10 @@ public class LoginSecurityController {
         return Result.loginVerifySuccess();
     }
 
+    /**
+     *
+     * @return return
+     */
     @RequestMapping(method = RequestMethod.POST,value = "/login/test")
     public Result<String> login_Test(){
         log.info("login verify Test");

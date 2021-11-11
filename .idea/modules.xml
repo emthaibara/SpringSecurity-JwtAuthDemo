@@ -3,7 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SecurityService-Provider.iml" filepath="$PROJECT_DIR$/SecurityService-Provider.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../springboot-jwt-demo-master/springboot-jwt-demo-master.iml" filepath="$PROJECT_DIR$/../springboot-jwt-demo-master/springboot-jwt-demo-master.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/RedisUtil/src/main/main.iml" filepath="$USER_HOME$/Desktop/RedisUtil/src/main/main.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/RedisUtil/src/test/test.iml" filepath="$USER_HOME$/Desktop/RedisUtil/src/test/test.iml" />
     </modules>
   </component>
 </project>

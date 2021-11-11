@@ -11,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.util.StringUtils;
+
+import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -61,6 +63,7 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
         UserDetails userDetails = (UserDetails)authentication.getPrincipal();
         log.info(userDetails.getUsername());
         log.info(userDetails.getAuthorities().toString());
+        //将生成的Auth实体Authentication存放进SecurityContextHolder用于校验------真实的做校验的对象是由UserDetails(这个可以自己重写)做对比
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return authentication;
     }
@@ -83,18 +86,17 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
             }
             return body.toString();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return null;
     }
-
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
                                             HttpServletResponse response,
                                             FilterChain chain,
                                             Authentication authResult) throws IOException, ServletException {
-        String token = new JwtUtil().generateToken((UserDetails) authResult.getPrincipal());
+        String token = JwtUtil.generateToken((UserDetails) authResult.getPrincipal());
         log.info("[successfulAuthentication--------token----:]{}",token);
         response.setHeader("token", JwtUtil.TOKENPREFIX + token);
         chain.doFilter(request,response);

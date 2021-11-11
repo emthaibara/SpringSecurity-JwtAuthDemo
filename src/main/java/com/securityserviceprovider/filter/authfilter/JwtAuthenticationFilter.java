@@ -1,6 +1,5 @@
 package com.securityserviceprovider.filter.authfilter;
 import com.securityserviceprovider.util.JwtUtil;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,6 +25,8 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
@@ -57,14 +58,18 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
         return null;
     }
 
+    private static final int tokenRefreshInterval = 300;
+
     @Override
     protected void onSuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, Authentication authResult) throws IOException {
-        super.onSuccessfulAuthentication(request, response, authResult);
+        //刷新token的时间
+
     }
 
     @Override
     protected void onUnsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
         //验证失败直接响应动态码
+        SecurityContextHolder.clearContext();
         response.getWriter().write("authentication failed, reason: " + failed.getMessage());
     }
 }

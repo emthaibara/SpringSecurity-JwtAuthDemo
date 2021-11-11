@@ -2,6 +2,7 @@ package com.securityserviceprovider.config.authconfig;
 
 import com.securityserviceprovider.filter.authfilter.JwtAuthenticationFilter;
 import com.securityserviceprovider.filter.authfilter.LoginAuthenticationFilter;
+import com.securityserviceprovider.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,8 +15,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 import javax.annotation.Resource;
 
