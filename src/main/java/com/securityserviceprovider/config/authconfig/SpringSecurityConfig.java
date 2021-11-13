@@ -4,6 +4,7 @@ import com.securityserviceprovider.filter.authfilter.JwtAuthenticationFilter;
 import com.securityserviceprovider.filter.authfilter.LoginAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,6 +27,18 @@ import javax.annotation.Resource;
 @Configuration
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    @Resource
+    @Lazy
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Resource
+    @Lazy
+    private LoginAuthenticationFilter loginAuthenticationFilter;
+
+    @Resource
+    @Lazy
+    private MyUserDetails myUserDetails;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
@@ -39,38 +52,30 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .csrf().disable()               //CRSF禁用，因为不使用session
                 .sessionManagement().disable()      //禁用session
-                .addFilter(new JwtAuthenticationFilter(authenticationManager())) //添加Jwt验证的过滤器
-                .addFilter(new LoginAuthenticationFilter(authenticationManager()))//添加Login时候的校验过滤器
+                .addFilter(jwtAuthenticationFilter) //添加Jwt验证的过滤器
+                .addFilter(loginAuthenticationFilter)//添加Login时候的校验过滤器
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
-
-    @Resource
-    private MyUserDetails myUserDetails;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(daoAuthenticationProvider()).userDetailsService(myUserDetails).passwordEncoder(passwordEncoder());
     }
 
-    @Override
-    protected AuthenticationManager authenticationManager() throws Exception {
-        return super.authenticationManager();
-    }
-
     /**
      * 将BCryptPasswordEncoder设置成bean
-     * @return return
+     * @return PasswordEncoder
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * 这里指定 auth的 provider 为dao provider 当然也有别的实现类，并设置指定的自定义的UserDetails（真实数据从数据库拿）
-     * @return
-     * @throws Exception
-     */
+    @Bean
+    public AuthenticationManager authenticationManagerBecomeBean() throws Exception {
+        return authenticationManager();
+    }
+
     @Bean
     protected AuthenticationProvider daoAuthenticationProvider() throws Exception{
         //这里会默认使用BCryptPasswordEncoder比对加密后的密码，注意要跟createUser时保持一致

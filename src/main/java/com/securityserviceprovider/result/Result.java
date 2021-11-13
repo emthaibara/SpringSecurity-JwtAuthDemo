@@ -8,6 +8,7 @@ package com.securityserviceprovider.result;
  *              1.success
  */
 public class Result<T> {
+
     private Integer code ;
     private String codeMsg;
     private T data;

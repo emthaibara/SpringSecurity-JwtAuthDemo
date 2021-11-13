@@ -10,7 +10,6 @@ class SecurityServiceProviderApplicationTests {
 
     @Test
     void contextLoads() {
-        System.out.println(RedisUtil.set("a","b"));
     }
 
 }

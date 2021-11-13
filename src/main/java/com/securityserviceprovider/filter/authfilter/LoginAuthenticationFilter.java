@@ -5,6 +5,7 @@ import com.securityserviceprovider.util.RedisKeyPrefix;
 import com.securityserviceprovider.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,8 +13,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -27,9 +30,13 @@ import java.nio.charset.StandardCharsets;
  * @Author:SCBC_LiYongJie
  * @time:2021/11/1
  */
+@Component
 public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private static final Logger log = LoggerFactory.getLogger(LoginAuthenticationFilter.class);
+
+    @Resource
+    private RedisUtil redisUtil;
 
     public LoginAuthenticationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
@@ -44,30 +51,37 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
     @Override
     public Authentication attemptAuthentication(HttpServletRequest httpServletRequest,
                                                 HttpServletResponse httpServletResponse) throws AuthenticationException{
+
+        //我这里对body解析处理的并不是很好，如果有更好的策略可以替换
         String body ;
         body = getBody(httpServletRequest);
         log.info(body);
         String phoneNumber = null, password = null;
+
         if(StringUtils.hasText(body)) {
             phoneNumber = body.substring(body.indexOf("=")+1,body.indexOf("&"));
             password = body.substring(body.lastIndexOf("=")+1);
         }
+
         if (phoneNumber == null)
             phoneNumber = "";
         if (password == null)
             password = "";
+
         phoneNumber = phoneNumber.trim(); //去除前后空格，以防万一
+
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
                 phoneNumber, password);
+
         Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
-        UserDetails userDetails = (UserDetails)authentication.getPrincipal();
 
-        log.info(userDetails.getUsername());
-
-        log.info(userDetails.getAuthorities().toString());
+//        UserDetails userDetails = (UserDetails)authentication.getPrincipal();
+//        log.info(userDetails.getUsername());
+//        log.info(userDetails.getAuthorities().toString());
 
         //将生成的Auth实体Authentication存放进SecurityContextHolder用于校验------真实的做校验的对象是由UserDetails(这个可以自己重写)做对比
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
         return authentication;
     }
 
@@ -100,12 +114,32 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
                                             HttpServletResponse response,
                                             FilterChain chain,
                                             Authentication authResult) throws IOException, ServletException {
-        UserDetails userDetails= (UserDetails) authResult.getPrincipal();
+        UserDetails userDetails = (UserDetails) authResult.getPrincipal();
+        //一个用户一个登陆，如果当前用户已经被登陆过，那么就把另外一个登陆此用户的token令牌删除
+        if (isOnline(userDetails.getUsername())){
+            deleteCacheToken(userDetails.getUsername());
+        }
+
         String token = JwtUtil.generateToken(userDetails);
-        RedisUtil.set(RedisKeyPrefix.SALTPREFIX +token,JwtUtil.getSalt());
+        cacheToken(userDetails.getUsername(),token);
         log.info("[successfulAuthentication--------token----:]{}",token);
         response.setHeader("token", JwtUtil.TOKENPREFIX + token);
         chain.doFilter(request,response);
+    }
+
+    private void deleteCacheToken(String phoneNumber) {
+        String cacheToken = redisUtil.get(RedisKeyPrefix.IDPREFIX+phoneNumber);
+        redisUtil.delete(RedisKeyPrefix.TOKENPREFIX+cacheToken);
+    }
+
+    private Boolean isOnline(String phoneNumber){
+        Boolean isOnline = redisUtil.hasKey(RedisKeyPrefix.IDPREFIX+phoneNumber);
+        return isOnline != null && isOnline;    //<==>isOnline == null ? false : isOnline;
+    }
+
+    private void cacheToken(String phoneNumber,String token){
+        redisUtil.set(RedisKeyPrefix.TOKENPREFIX +token,JwtUtil.getSalt());
+        redisUtil.set(RedisKeyPrefix.IDPREFIX+phoneNumber,token);
     }
 
     @Override
@@ -113,6 +147,7 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
                                               HttpServletResponse response,
                                               AuthenticationException failed) throws IOException {
         log.info("[unsuccessfulAuthentication--------");
+        SecurityContextHolder.clearContext();
         response.getWriter().write("authentication failed, reason: " + failed.getMessage());
     }
 }

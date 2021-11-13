@@ -6,7 +6,6 @@ package com.securityserviceprovider.util;
  */
 
 public class RedisKeyPrefix {
-
-    public static final String SALTPREFIX = "salt";
-
+    public static final String TOKENPREFIX = "salt";
+    public static final String IDPREFIX = "id";
 }
