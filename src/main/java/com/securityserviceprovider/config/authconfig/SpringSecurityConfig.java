@@ -2,7 +2,6 @@ package com.securityserviceprovider.config.authconfig;
 
 import com.securityserviceprovider.filter.authfilter.JwtAuthenticationFilter;
 import com.securityserviceprovider.filter.authfilter.LoginAuthenticationFilter;
-import com.securityserviceprovider.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,7 +30,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 // 测试用资源，需要验证了的用户才能访问
-                .antMatchers("/login/test").hasRole("MEMBER")
+                .antMatchers("/login/member").hasRole("MEMBER")
+                .antMatchers("login/nonmember").hasAnyRole("NONMEMBER","MEMBER","MERCHANT")
                 // 其他都放行了
                 .anyRequest().authenticated()
                 .and()
@@ -57,11 +57,20 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManager();
     }
 
+    /**
+     * 将BCryptPasswordEncoder设置成bean
+     * @return return
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * 这里指定 auth的 provider 为dao provider 当然也有别的实现类，并设置指定的自定义的UserDetails（真实数据从数据库拿）
+     * @return
+     * @throws Exception
+     */
     @Bean
     protected AuthenticationProvider daoAuthenticationProvider() throws Exception{
         //这里会默认使用BCryptPasswordEncoder比对加密后的密码，注意要跟createUser时保持一致

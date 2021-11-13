@@ -1,5 +1,7 @@
 package com.securityserviceprovider.filter.authfilter;
 import com.securityserviceprovider.util.JwtUtil;
+import com.securityserviceprovider.util.RedisKeyPrefix;
+import com.securityserviceprovider.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,18 +17,18 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
+import java.util.Date;
 
 /**
  * @Author:SCBC_LiYongJie
  * @time:2021/11/8
  */
-
 public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-
-
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
@@ -48,9 +50,11 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
     private UsernamePasswordAuthenticationToken getAuthentication(String tokenHeader) {
         String token = tokenHeader.replace(JwtUtil.TOKENPREFIX, "");
-        String username = JwtUtil.getUsername(token);
-        String role = JwtUtil.getUserRole(token);
+        String salt = RedisUtil.get(RedisKeyPrefix.SALTPREFIX +token);
+        String username = JwtUtil.getUsername(token, salt);
         if (username != null){
+            String role = JwtUtil.getUserRole(token , salt);
+            log.info("username:"+username+" role:"+role);
             return new UsernamePasswordAuthenticationToken(username, null,
                     Collections.singleton(new SimpleGrantedAuthority(role))
             );
@@ -60,10 +64,24 @@ public class JwtAuthenticationFilter extends BasicAuthenticationFilter {
 
     private static final int tokenRefreshInterval = 300;
 
+    /**
+     *          如果jwt验证成功，首先检查token的发放时间是否超过5分钟
+     *          如果超时则刷新token，并返回新的token，刷新redis和header中的token
+     *              在这之前，需要去缓存中拿到salt
+     * @param request request
+     * @param response  response
+     * @param authResult authResult
+     * @throws IOException IOException
+     */
     @Override
     protected void onSuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, Authentication authResult) throws IOException {
         //刷新token的时间
 
+    }
+
+    protected Boolean shouldTokenRefresh(Date issueAt){
+        LocalDateTime issueTime = LocalDateTime.ofInstant(issueAt.toInstant(), ZoneId.systemDefault());
+        return LocalDateTime.now().minusSeconds(tokenRefreshInterval).isAfter(issueTime);
     }
 
     @Override

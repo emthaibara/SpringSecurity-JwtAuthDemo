@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.securityserviceprovider.dao.AuthUserMapper" >
+  <resultMap id="BaseResultMap" type="com.securityserviceprovider.entity.AuthUser" >
+    <id column="phoneNumber" property="phonenumber" jdbcType="VARCHAR" />
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="role" property="role" jdbcType="VARCHAR" />
+    <result column="introduction" property="introduction" jdbcType="VARCHAR" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from LYJ.User
+    where phoneNumber = #{phonenumber,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.securityserviceprovider.entity.AuthUser" >
+    insert into LYJ.User (phoneNumber, username, password,
+      role, introduction)
+    values (#{phonenumber,jdbcType=VARCHAR}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{role,jdbcType=VARCHAR}, #{introduction,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.securityserviceprovider.entity.AuthUser" >
+    update LYJ.User
+    set username = #{username,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      role = #{role,jdbcType=VARCHAR},
+      introduction = #{introduction,jdbcType=VARCHAR}
+    where phoneNumber = #{phonenumber,jdbcType=VARCHAR}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select phoneNumber, username, password, role, introduction
+    from LYJ.User
+    where phoneNumber = #{phonenumber,jdbcType=VARCHAR}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select phoneNumber, username, password, role, introduction
+    from LYJ.User
+  </select>
+</mapper>

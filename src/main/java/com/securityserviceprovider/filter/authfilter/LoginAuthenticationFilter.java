@@ -1,6 +1,8 @@
 package com.securityserviceprovider.filter.authfilter;
 
 import com.securityserviceprovider.util.JwtUtil;
+import com.securityserviceprovider.util.RedisKeyPrefix;
+import com.securityserviceprovider.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -50,7 +51,6 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
         if(StringUtils.hasText(body)) {
             phoneNumber = body.substring(body.indexOf("=")+1,body.indexOf("&"));
             password = body.substring(body.lastIndexOf("=")+1);
-            System.out.println("phoneNumber="+phoneNumber+" password="+password);
         }
         if (phoneNumber == null)
             phoneNumber = "";
@@ -61,8 +61,11 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
                 phoneNumber, password);
         Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
         UserDetails userDetails = (UserDetails)authentication.getPrincipal();
+
         log.info(userDetails.getUsername());
+
         log.info(userDetails.getAuthorities().toString());
+
         //将生成的Auth实体Authentication存放进SecurityContextHolder用于校验------真实的做校验的对象是由UserDetails(这个可以自己重写)做对比
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return authentication;
@@ -91,12 +94,15 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
         return null;
     }
 
+
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
                                             HttpServletResponse response,
                                             FilterChain chain,
                                             Authentication authResult) throws IOException, ServletException {
-        String token = JwtUtil.generateToken((UserDetails) authResult.getPrincipal());
+        UserDetails userDetails= (UserDetails) authResult.getPrincipal();
+        String token = JwtUtil.generateToken(userDetails);
+        RedisUtil.set(RedisKeyPrefix.SALTPREFIX +token,JwtUtil.getSalt());
         log.info("[successfulAuthentication--------token----:]{}",token);
         response.setHeader("token", JwtUtil.TOKENPREFIX + token);
         chain.doFilter(request,response);
@@ -105,7 +111,7 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
                                               HttpServletResponse response,
-                                              AuthenticationException failed) throws IOException, ServletException {
+                                              AuthenticationException failed) throws IOException {
         log.info("[unsuccessfulAuthentication--------");
         response.getWriter().write("authentication failed, reason: " + failed.getMessage());
     }

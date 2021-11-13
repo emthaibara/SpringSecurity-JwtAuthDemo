@@ -3,8 +3,7 @@ package com.securityserviceprovider.config.redisconfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * @Author:SCBC_LiYongJie
@@ -15,32 +14,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String,String> redisValueOfStringTemplate(LettuceConnectionFactory redisConnectionFactory) {
-            RedisTemplate<String,String> stringTemplate = new RedisTemplate<>();
-            StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-            stringTemplate.setKeySerializer(stringRedisSerializer);
-            stringTemplate.setValueSerializer(stringRedisSerializer);
-            stringTemplate.setConnectionFactory(redisConnectionFactory);
-            return stringTemplate;
+    public StringRedisTemplate redisValueOfStringTemplate(LettuceConnectionFactory redisConnectionFactory) {
+        return new StringRedisTemplate(redisConnectionFactory);
     }
-
-    /**
-     *              key     value
-     *
-     *
-     *             String   Object
-     *
-     *
-     */
-//    @Bean
-//    public RedisTemplate<String,Object> redisValueOfObjectTemplate(LettuceConnectionFactory redisConnectionFactory) {
-//        RedisTemplate<String,Object> stringTemplate = new RedisTemplate<>();
-//        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-//        stringTemplate.setKeySerializer(stringRedisSerializer);
-//
-//        stringTemplate.setValueSerializer();
-//        stringTemplate.setConnectionFactory(redisConnectionFactory);
-//        return stringTemplate;
-//    }
 
 }

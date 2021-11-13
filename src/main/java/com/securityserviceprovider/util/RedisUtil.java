@@ -2,9 +2,9 @@ package com.securityserviceprovider.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -15,14 +15,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class RedisUtil {
 
-    @Resource
+    private static final Logger log = LoggerFactory.getLogger(RedisUtil.class);
+
     private static StringRedisTemplate redisTemplate;
+
+    public static StringRedisTemplate getRedisTemplate() {
+        return redisTemplate;
+    }
+
+    public static void setRedisTemplate(StringRedisTemplate redisTemplate) {
+        RedisUtil.redisTemplate = redisTemplate;
+    }
 
     /**
      *  一个对Redis进行操作的工具类---->全部实例方法
      */
-
-    private static final Logger log = LoggerFactory.getLogger(RedisUtil.class);
 
     /**
      *  通过key 查找对应的 value
@@ -54,7 +61,7 @@ public class RedisUtil {
      * @param key key
      * @return 0(forever) or expire (s) or null(key does not exist)
      */
-    public Long getExpire(String key) {
+    public static Long getExpire(String key) {
         return redisTemplate.getExpire(key, TimeUnit.SECONDS);
     }
 
@@ -85,7 +92,7 @@ public class RedisUtil {
      * @param time  expire time (s)
      * @return false or true , null
      */
-    public Boolean expire(String key, long time) {
+    public static Boolean expire(String key, long time) {
         try {
             if (time >= 0) {
                 return redisTemplate.expire(key, time, TimeUnit.SECONDS);
@@ -125,7 +132,4 @@ public class RedisUtil {
             }
         }
     }
-
-
-
 }

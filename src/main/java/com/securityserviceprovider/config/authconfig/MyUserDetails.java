@@ -1,5 +1,7 @@
 package com.securityserviceprovider.config.authconfig;
 
+import com.securityserviceprovider.dao.AuthUserMapper;
+import com.securityserviceprovider.entity.AuthUser;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -40,12 +42,19 @@ public class MyUserDetails implements UserDetailsService {
     @Resource
     private PasswordEncoder passwordEncoder;
 
+    @Resource
+    private AuthUser authUser;
+
+    @Resource
+    private AuthUserMapper authUserMapper;
+
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
+        authUser = authUserMapper.selectByPrimaryKey(s);
         return User.builder().
                 username(s).
-                password(passwordEncoder.encode("root1")).
-                roles("MEMBER").
+                password(passwordEncoder.encode(authUser.getPassword())).
+                roles(authUser.getRole()).
                 build();
     }
 
@@ -56,4 +65,6 @@ public class MyUserDetails implements UserDetailsService {
                 ", password='" + password + '\'' +
                 '}';
     }
+
+
 }

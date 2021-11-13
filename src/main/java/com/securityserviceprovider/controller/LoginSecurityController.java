@@ -3,10 +3,7 @@ package com.securityserviceprovider.controller;
 import com.securityserviceprovider.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @Author:SCBC_LiYongJie
@@ -23,15 +20,16 @@ public class LoginSecurityController {
         return Result.loginVerifySuccess();
     }
 
-    /**
-     *
-     * @return return
-     */
-    @RequestMapping(method = RequestMethod.POST,value = "/login/test")
-    public Result<String> login_Test(){
-        log.info("login verify Test");
-        return Result.loginVerifySuccess();
+    @GetMapping("login/member")
+    public Result<String> member(){
+        log.info("member");
+        return Result.success("member hello");
     }
 
+    @GetMapping("login/nonmember")
+    public Result<String> nonMember(){
+        log.info("nonMember");
+        return Result.success("nonMember hello");
+    }
 
 }
