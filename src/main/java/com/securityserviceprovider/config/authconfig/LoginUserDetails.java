@@ -19,7 +19,7 @@ import javax.annotation.Resource;
  */
 
 @Component
-public class MyUserDetails implements UserDetailsService {
+public class LoginUserDetails implements UserDetailsService {
 
     private String phoneNumber;
 
@@ -47,16 +47,17 @@ public class MyUserDetails implements UserDetailsService {
     @Resource
     private AuthUserMapper authUserMapper;
 
-    private static final Logger log = LoggerFactory.getLogger(MyUserDetails.class);
+    private static final Logger log = LoggerFactory.getLogger(LoginUserDetails.class);
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
-        System.out.println(s+"======");
-        return User.builder().
-                username(s).
-                password(passwordEncoder.encode(authUserMapper.selectByPrimaryKey(s).getPassword())).
-                roles(authUserMapper.selectByPrimaryKey(s).getRole()).
-                build();
+        AuthUser authUser = authUserMapper.selectByPrimaryKey(s);
+        log.info(authUser.toString());
+        return User.builder()
+                .username(s)
+                .password(passwordEncoder.encode(authUser.getPassword()))
+                .roles(authUser.getRole())
+                .build();
     }
 
     @Override

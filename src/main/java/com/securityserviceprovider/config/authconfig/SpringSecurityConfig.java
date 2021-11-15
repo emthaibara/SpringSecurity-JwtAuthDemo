@@ -33,7 +33,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Resource
     @Lazy
-    private MyUserDetails myUserDetails;
+    private LoginUserDetails loginUserDetails;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -55,7 +55,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(daoAuthenticationProvider()).userDetailsService(myUserDetails).passwordEncoder(passwordEncoder());
+        auth.authenticationProvider(daoAuthenticationProvider()).userDetailsService(loginUserDetails).passwordEncoder(passwordEncoder());
     }
 
     @Override
@@ -76,7 +76,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     protected AuthenticationProvider daoAuthenticationProvider() throws Exception{
         //这里会默认使用BCryptPasswordEncoder比对加密后的密码，注意要跟createUser时保持一致
         DaoAuthenticationProvider daoProvider = new DaoAuthenticationProvider();
-        daoProvider.setUserDetailsService(myUserDetails);
+        daoProvider.setUserDetailsService(loginUserDetails);
         daoProvider.setPasswordEncoder(passwordEncoder());
         return daoProvider;
     }
