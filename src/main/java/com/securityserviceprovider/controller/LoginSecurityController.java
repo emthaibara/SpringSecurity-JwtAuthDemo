@@ -28,7 +28,7 @@ public class LoginSecurityController {
 
     @GetMapping("login/nonmember")
     public Result<String> nonMember(){
-        log.info("nonMember");
+        log.info("nonmember");
         return Result.success("nonMember hello");
     }
 

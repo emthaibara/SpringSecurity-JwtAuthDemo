@@ -2,6 +2,8 @@ package com.securityserviceprovider.config.authconfig;
 
 import com.securityserviceprovider.dao.AuthUserMapper;
 import com.securityserviceprovider.entity.AuthUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -43,18 +45,17 @@ public class MyUserDetails implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     @Resource
-    private AuthUser authUser;
-
-    @Resource
     private AuthUserMapper authUserMapper;
+
+    private static final Logger log = LoggerFactory.getLogger(MyUserDetails.class);
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
-        authUser = authUserMapper.selectByPrimaryKey(s);
+        System.out.println(s+"======");
         return User.builder().
                 username(s).
-                password(passwordEncoder.encode(authUser.getPassword())).
-                roles(authUser.getRole()).
+                password(passwordEncoder.encode(authUserMapper.selectByPrimaryKey(s).getPassword())).
+                roles(authUserMapper.selectByPrimaryKey(s).getRole()).
                 build();
     }
 

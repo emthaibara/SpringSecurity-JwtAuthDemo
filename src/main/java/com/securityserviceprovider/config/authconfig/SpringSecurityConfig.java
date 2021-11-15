@@ -2,6 +2,7 @@ package com.securityserviceprovider.config.authconfig;
 
 import com.securityserviceprovider.filter.authfilter.JwtAuthenticationFilter;
 import com.securityserviceprovider.filter.authfilter.LoginAuthenticationFilter;
+import com.securityserviceprovider.util.RedisUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -28,12 +29,7 @@ import javax.annotation.Resource;
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Resource
-    @Lazy
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @Resource
-    @Lazy
-    private LoginAuthenticationFilter loginAuthenticationFilter;
+    RedisUtil redisUtil;
 
     @Resource
     @Lazy
@@ -45,21 +41,26 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 // 测试用资源，需要验证了的用户才能访问
                 .antMatchers("/login/member").hasRole("MEMBER")
                 .antMatchers("login/nonmember").hasAnyRole("NONMEMBER","MEMBER","MERCHANT")
-                // 其他都放行了
+                // 其他的都需要auth
                 .anyRequest().authenticated()
                 .and()
                 .cors()
                 .and()
+                .addFilterBefore(new LoginAuthenticationFilter(authenticationManager(),redisUtil),JwtAuthenticationFilter.class)
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(),redisUtil))
                 .csrf().disable()               //CRSF禁用，因为不使用session
                 .sessionManagement().disable()      //禁用session
-                .addFilter(jwtAuthenticationFilter) //添加Jwt验证的过滤器
-                .addFilter(loginAuthenticationFilter)//添加Login时候的校验过滤器
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(daoAuthenticationProvider()).userDetailsService(myUserDetails).passwordEncoder(passwordEncoder());
+    }
+
+    @Override
+    protected AuthenticationManager authenticationManager() throws Exception {
+        return super.authenticationManager();
     }
 
     /**
@@ -69,11 +70,6 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManagerBecomeBean() throws Exception {
-        return authenticationManager();
     }
 
     @Bean

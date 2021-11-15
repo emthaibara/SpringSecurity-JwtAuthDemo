@@ -5,7 +5,6 @@ import com.securityserviceprovider.util.RedisKeyPrefix;
 import com.securityserviceprovider.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,10 +12,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -25,21 +22,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * @Author:SCBC_LiYongJie
  * @time:2021/11/1
  */
-@Component
 public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private static final Logger log = LoggerFactory.getLogger(LoginAuthenticationFilter.class);
 
-    @Resource
-    private RedisUtil redisUtil;
+    private final RedisUtil redisUtil;
 
-    public LoginAuthenticationFilter(AuthenticationManager authenticationManager) {
+    public LoginAuthenticationFilter(AuthenticationManager authenticationManager,RedisUtil redisUtil) {
         super(authenticationManager);
+        this.redisUtil = redisUtil;
     }
 
     /**
@@ -47,11 +44,9 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
                                                 new AntPathRequestMatcher("/login", "POST");
             默认拦截路径/login 和 method = POST
      */
-
     @Override
     public Authentication attemptAuthentication(HttpServletRequest httpServletRequest,
                                                 HttpServletResponse httpServletResponse) throws AuthenticationException{
-
         //我这里对body解析处理的并不是很好，如果有更好的策略可以替换
         String body ;
         body = getBody(httpServletRequest);
@@ -81,7 +76,6 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
 
         //将生成的Auth实体Authentication存放进SecurityContextHolder用于校验------真实的做校验的对象是由UserDetails(这个可以自己重写)做对比
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         return authentication;
     }
 
@@ -92,18 +86,26 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
      * @return return
      */
     private String getBody(HttpServletRequest httpServletRequest) {
+        BufferedReader streamReader = null;
         try {
             StringBuilder body;
-            try (BufferedReader streamReader = new BufferedReader(new InputStreamReader(httpServletRequest.getInputStream(), StandardCharsets.UTF_8))) {
+            streamReader = new BufferedReader(new InputStreamReader(httpServletRequest.getInputStream(), StandardCharsets.UTF_8));
                 body = new StringBuilder();
                 String line;
                 while ((line = streamReader.readLine()) != null) {
                     body.append(line);
                 }
-            }
             return body.toString();
         } catch (IOException e) {
             log.error(e.getMessage());
+        }finally {
+            try {
+                if (!Objects.isNull(streamReader)) {
+                    streamReader.close();
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
         }
         return null;
     }
@@ -122,6 +124,7 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
 
         String token = JwtUtil.generateToken(userDetails);
         cacheToken(userDetails.getUsername(),token);
+
         log.info("[successfulAuthentication--------token----:]{}",token);
         response.setHeader("token", JwtUtil.TOKENPREFIX + token);
         chain.doFilter(request,response);

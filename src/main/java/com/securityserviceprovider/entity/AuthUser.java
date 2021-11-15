@@ -1,8 +1,5 @@
 package com.securityserviceprovider.entity;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class AuthUser {
 
     private String phonenumber;
