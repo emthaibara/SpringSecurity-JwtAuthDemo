@@ -1,5 +1,8 @@
 package com.securityserviceprovider.filter.authfilter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.securityserviceprovider.exception.BaseException;
+import com.securityserviceprovider.pojo.LoginVo;
 import com.securityserviceprovider.util.JwtUtil;
 import com.securityserviceprovider.util.RedisKeyPrefix;
 import com.securityserviceprovider.util.RedisUtil;
@@ -12,16 +15,12 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.util.StringUtils;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -34,10 +33,14 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
 
     private final RedisUtil redisUtil;
 
-    public LoginAuthenticationFilter(AuthenticationManager authenticationManager,RedisUtil redisUtil) {
+    private final ObjectMapper objectMapper;
+
+    public LoginAuthenticationFilter(AuthenticationManager authenticationManager, RedisUtil redisUtil, ObjectMapper objectMapper) {
         super(authenticationManager);
         this.redisUtil = redisUtil;
+        this.objectMapper = objectMapper;
     }
+
 
     /**
         private static final AntPathRequestMatcher DEFAULT_ANT_PATH_REQUEST_MATCHER =
@@ -46,23 +49,22 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
      */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest httpServletRequest,
-                                                HttpServletResponse httpServletResponse) throws AuthenticationException{
+                                                HttpServletResponse httpServletResponse) throws BaseException{
         //我这里对body解析处理的并不是很好，如果有更好的策略可以替换
-        String body ;
-        body = getBody(httpServletRequest);
-        log.info(body);
-        String phoneNumber = null, password = null;
-
-        if(StringUtils.hasText(body)) {
-            phoneNumber = body.substring(body.indexOf("=")+1,body.indexOf("&"));
-            password = body.substring(body.lastIndexOf("=")+1);
+        String phoneNumber, password;
+        LoginVo loginVo;
+        try {
+            loginVo = objectMapper.readValue(httpServletRequest.getInputStream(), LoginVo.class);
+        } catch (IOException e) {
+            log.info(e.getMessage());
+            throw new BaseException(e.getMessage());
         }
-
-        if (phoneNumber == null)
-            phoneNumber = "";
-        if (password == null)
-            password = "";
-
+        if (!Objects.isNull(loginVo)){
+            password = loginVo.getPassword();
+            phoneNumber = loginVo.getPhoneNumber();
+        }else {
+            throw new BaseException("登陆表单信息填写不完整");
+        }
         phoneNumber = phoneNumber.trim(); //去除前后空格，以防万一
 
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
@@ -70,44 +72,9 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
 
         Authentication authentication = this.getAuthenticationManager().authenticate(authRequest);
 
-//        UserDetails userDetails = (UserDetails)authentication.getPrincipal();
-//        log.info(userDetails.getUsername());
-//        log.info(userDetails.getAuthorities().toString());
-
         //将生成的Auth实体Authentication存放进SecurityContextHolder用于校验------真实的做校验的对象是由UserDetails(这个可以自己重写)做对比
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return authentication;
-    }
-
-    /**
-     *     用流处理httpServletRequest
-     *      获取body的username/password/data....
-     * @param httpServletRequest httpServletRequest
-     * @return return
-     */
-    private String getBody(HttpServletRequest httpServletRequest) {
-        BufferedReader streamReader = null;
-        try {
-            StringBuilder body;
-            streamReader = new BufferedReader(new InputStreamReader(httpServletRequest.getInputStream(), StandardCharsets.UTF_8));
-                body = new StringBuilder();
-                String line;
-                while ((line = streamReader.readLine()) != null) {
-                    body.append(line);
-                }
-            return body.toString();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }finally {
-            try {
-                if (!Objects.isNull(streamReader)) {
-                    streamReader.close();
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            }
-        }
-        return null;
     }
 
 
@@ -148,9 +115,9 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
                                               HttpServletResponse response,
-                                              AuthenticationException failed) throws IOException {
+                                              AuthenticationException failed) {
         log.info("[unsuccessfulAuthentication--------");
         SecurityContextHolder.clearContext();
-        response.getWriter().write("authentication failed, reason: " + failed.getMessage());
+        throw new BaseException("authentication failed, reason: " + failed.getMessage());
     }
 }

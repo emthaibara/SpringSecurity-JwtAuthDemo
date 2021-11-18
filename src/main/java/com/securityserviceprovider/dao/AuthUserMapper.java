@@ -1,11 +1,8 @@
 package com.securityserviceprovider.dao;
 
-import com.securityserviceprovider.entity.AuthUser;
-import org.springframework.stereotype.Component;
-
+import com.securityserviceprovider.pojo.AuthUser;
 import java.util.List;
 
-@Component
 public interface AuthUserMapper {
     int deleteByPrimaryKey(String phonenumber);
 

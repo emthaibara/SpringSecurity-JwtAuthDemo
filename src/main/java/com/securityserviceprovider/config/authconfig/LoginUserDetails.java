@@ -1,7 +1,7 @@
 package com.securityserviceprovider.config.authconfig;
 
 import com.securityserviceprovider.dao.AuthUserMapper;
-import com.securityserviceprovider.entity.AuthUser;
+import com.securityserviceprovider.pojo.AuthUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.User;
@@ -21,33 +21,13 @@ import javax.annotation.Resource;
 @Component
 public class LoginUserDetails implements UserDetailsService {
 
-    private String phoneNumber;
-
-    private String password;
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    private static final Logger log = LoggerFactory.getLogger(LoginUserDetails.class);
 
     @Resource
     private PasswordEncoder passwordEncoder;
 
     @Resource
     private AuthUserMapper authUserMapper;
-
-    private static final Logger log = LoggerFactory.getLogger(LoginUserDetails.class);
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
@@ -59,14 +39,4 @@ public class LoginUserDetails implements UserDetailsService {
                 .roles(authUser.getRole())
                 .build();
     }
-
-    @Override
-    public String toString() {
-        return "MyUserDetails{" +
-                "phoneNumber='" + phoneNumber + '\'' +
-                ", password='" + password + '\'' +
-                '}';
-    }
-
-
 }

@@ -1,5 +1,6 @@
 package com.securityserviceprovider.config.authconfig;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.securityserviceprovider.filter.authfilter.JwtAuthenticationFilter;
 import com.securityserviceprovider.filter.authfilter.LoginAuthenticationFilter;
 import com.securityserviceprovider.util.RedisUtil;
@@ -35,6 +36,9 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     @Lazy
     private LoginUserDetails loginUserDetails;
 
+    @Resource
+    private ObjectMapper objectMapper;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
@@ -46,7 +50,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .cors()
                 .and()
-                .addFilterBefore(new LoginAuthenticationFilter(authenticationManager(),redisUtil),JwtAuthenticationFilter.class)
+                .addFilterBefore(new LoginAuthenticationFilter(authenticationManager(),redisUtil,objectMapper),JwtAuthenticationFilter.class)
                 .addFilter(new JwtAuthenticationFilter(authenticationManager(),redisUtil))
                 .csrf().disable()               //CRSF禁用，因为不使用session
                 .sessionManagement().disable()      //禁用session
@@ -71,6 +75,12 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Bean
+    public ObjectMapper objectMapper(){
+        return new ObjectMapper();
+    }
+
 
     @Bean
     protected AuthenticationProvider daoAuthenticationProvider() throws Exception{

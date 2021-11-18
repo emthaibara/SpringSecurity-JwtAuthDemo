@@ -13,6 +13,12 @@ public class Result<T> {
     private String codeMsg;
     private T data;
 
+    private Result(String codeMsg){
+        this.code = 0;
+        this.data = null;
+        this.codeMsg = codeMsg;
+    }
+
     private Result(CodeMsg codeMsg){
         this.code = codeMsg.getCode();
         this.data = null;
@@ -39,6 +45,9 @@ public class Result<T> {
         return new Result<>(codeMsg);
     }
 
+    public static  <T>Result<T> error(String codeMsg){
+        return new Result<>(codeMsg);
+    }
     public static Result<String> loginVerifySuccess(){
         return new Result<>(1,"登陆身份验证成功");
     }

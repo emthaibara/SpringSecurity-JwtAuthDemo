@@ -10,23 +10,23 @@ import org.springframework.web.bind.annotation.*;
  * @time:2021/11/1
  */
 @RestController
-public class LoginSecurityController {
+public class AuthController {
 
-    private static final Logger log = LoggerFactory.getLogger(LoginSecurityController.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    @PostMapping("/login")
+    @PostMapping("/sharedkitchen/login")
     public Result<String> login(){
         log.info("login verify success");
         return Result.loginVerifySuccess();
     }
 
-    @GetMapping("login/member")
+    @GetMapping("/sharedkitchen/login/member")
     public Result<String> member(){
         log.info("member");
         return Result.success("member hello");
     }
 
-    @GetMapping("login/nonmember")
+    @GetMapping("/sharedkitchen/login/nonmember")
     public Result<String> nonMember(){
         log.info("nonmember");
         return Result.success("nonMember hello");

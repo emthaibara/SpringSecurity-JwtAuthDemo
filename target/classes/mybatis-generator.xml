@@ -50,7 +50,7 @@
         </jdbcConnection>
 
         <!--  配置 Java 模型生成器 -->
-        <javaModelGenerator targetPackage="com.securityserviceprovider.entity" targetProject="src/main/java">
+        <javaModelGenerator targetPackage="com.securityserviceprovider.pojo" targetProject="src/main/java">
 
         </javaModelGenerator>
 

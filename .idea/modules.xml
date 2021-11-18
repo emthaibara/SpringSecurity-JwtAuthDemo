@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SecurityService-Provider.iml" filepath="$PROJECT_DIR$/SecurityService-Provider.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SignService-Provider/SignService-Provider.iml" filepath="$PROJECT_DIR$/../SignService-Provider/SignService-Provider.iml" />
     </modules>
   </component>
 </project>
